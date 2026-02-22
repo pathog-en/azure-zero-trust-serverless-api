@@ -1,0 +1,23 @@
+# Terraform
+**/.terraform/**
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+.terraform.tfstate.lock.info
+*.tfvars
+*.tfvars.json
+
+# Optional: local overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform CLI config (optional)
+.terraformrc
+terraform.rc
+
+# OS
+.DS_Store
+Thumbs.db
