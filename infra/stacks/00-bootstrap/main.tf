@@ -10,6 +10,12 @@ locals {
   }
 }
 
+resource "random_string" "suffix" {
+  length  = 8
+  upper   = false
+  special = false
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = "rg-${local.name}-tfstate"
   location = local.location
@@ -17,7 +23,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_storage_account" "sa" {
-  name                     = replace("st${local.project}${local.env}tf", "-", "")
+  name                     = "stzt${local.env}${random_string.suffix.result}"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
