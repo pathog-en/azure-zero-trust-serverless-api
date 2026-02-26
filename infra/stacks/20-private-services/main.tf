@@ -66,7 +66,7 @@ resource "azurerm_storage_account" "sa" {
   public_network_access_enabled   = false
 
   # strong Zero Trust signal (optional but good)
-  shared_access_key_enabled = var.disable_storage_shared_key ? false : true
+  shared_access_key_enabled = true
 
   tags = local.tags
 }
