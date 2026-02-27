@@ -76,7 +76,7 @@ resource "azurerm_monitor_diagnostic_setting" "sa_diag" {
   target_resource_id         = azurerm_storage_account.sa.id
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
   }
 }
