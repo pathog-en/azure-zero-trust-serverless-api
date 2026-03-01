@@ -22,7 +22,7 @@ resource "azurerm_service_plan" "plan" {
   resource_group_name = azurerm_resource_group.rg.name
 
   os_type  = "Linux"
-  sku_name = "EP1"
+  sku_name = "B1"
 
   tags = local.tags
 }
