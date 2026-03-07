@@ -64,6 +64,8 @@ resource "azurerm_linux_function_app" "func" {
   virtual_network_subnet_id = data.terraform_remote_state.core.outputs.subnet_app_integration_id
 
   https_only = true
+  # Enable this after PE validation:
+  # public_network_access_enabled = false
 
   identity {
     type = "SystemAssigned"
@@ -93,4 +95,25 @@ resource "azurerm_role_assignment" "kv_secrets_user" {
   scope                = data.terraform_remote_state.private.outputs.key_vault_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_linux_function_app.func.identity[0].principal_id
+}
+
+resource "azurerm_private_endpoint" "func_pe" {
+  name                = "pe-func-${var.env}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = data.terraform_remote_state.core.outputs.subnet_private_endpoints_id
+
+  private_service_connection {
+    name                           = "psc-func-${var.env}"
+    private_connection_resource_id = azurerm_linux_function_app.func.id
+    subresource_names              = ["sites"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "pdzg-func-${var.env}"
+    private_dns_zone_ids = [data.terraform_remote_state.core.outputs.private_dns_zone_appsvc_id]
+  }
+
+  tags = local.tags
 }
