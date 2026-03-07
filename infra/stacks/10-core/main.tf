@@ -53,6 +53,24 @@ resource "azurerm_subnet" "snet_private_endpoints" {
   private_endpoint_network_policies = "Enabled"
 }
 
+resource "azurerm_subnet" "snet_app_integration" {
+  name                 = "snet-app-integration"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [var.snet_app_integration_cidr]
+
+  delegation {
+    name = "appservice-delegation"
+
+    service_delegation {
+      name = "Microsoft.Web/serverFarms"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action"
+      ]
+    }
+  }
+}
+
 # -------- Private DNS Zones --------
 resource "azurerm_private_dns_zone" "kv" {
   name                = "privatelink.vaultcore.azure.net"

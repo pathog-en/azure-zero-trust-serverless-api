@@ -1,6 +1,31 @@
 locals {
   name = "${var.project}-${var.env}"
-  tags = merge(var.tags, { project = var.project, env = var.env })
+  tags = merge(var.tags, {
+    project = var.project
+    env     = var.env
+  })
+}
+
+data "terraform_remote_state" "core" {
+  backend = "azurerm"
+
+  config = {
+    resource_group_name  = "rg-azure-zero-trust-serverless-api-dev-tfstate"
+    storage_account_name = "stztdev6b7c5tsk"
+    container_name       = "tfstate"
+    key                  = "10-core.tfstate"
+  }
+}
+
+data "terraform_remote_state" "private" {
+  backend = "azurerm"
+
+  config = {
+    resource_group_name  = "rg-azure-zero-trust-serverless-api-dev-tfstate"
+    storage_account_name = "stztdev6b7c5tsk"
+    container_name       = "tfstate"
+    key                  = "20-private-services.tfstate"
+  }
 }
 
 resource "azurerm_resource_group" "rg" {
@@ -15,7 +40,6 @@ resource "random_string" "suffix" {
   special = false
 }
 
-# Consumption plan (lowest cost)
 resource "azurerm_service_plan" "plan" {
   name                = "asp-${local.name}"
   location            = azurerm_resource_group.rg.location
@@ -32,32 +56,41 @@ resource "azurerm_linux_function_app" "func" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
-  service_plan_id            = azurerm_service_plan.plan.id
-  storage_account_name       = var.storage_account_name
-  storage_account_access_key = null # we will set via app setting later if required
+  service_plan_id = azurerm_service_plan.plan.id
+
+  storage_account_name       = data.terraform_remote_state.private.outputs.storage_account_name
+  storage_account_access_key = null
+
+  virtual_network_subnet_id = data.terraform_remote_state.core.outputs.subnet_app_integration_id
+
+  https_only = true
 
   identity {
     type = "SystemAssigned"
   }
 
   site_config {
-    application_insights_connection_string = var.app_insights_connection_string
+    application_insights_connection_string = data.terraform_remote_state.core.outputs.app_insights_connection_string
+    ftps_state                             = "Disabled"
+    minimum_tls_version                    = "1.2"
+    vnet_route_all_enabled                 = true
+
     application_stack {
       python_version = "3.11"
     }
   }
 
   app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME" = "python"
-    "KEY_VAULT_URI"            = var.key_vault_uri
+    FUNCTIONS_WORKER_RUNTIME              = "python"
+    APPLICATIONINSIGHTS_CONNECTION_STRING = data.terraform_remote_state.core.outputs.app_insights_connection_string
+    KEY_VAULT_URI                         = data.terraform_remote_state.private.outputs.key_vault_uri
   }
 
   tags = local.tags
 }
 
-# Grant Function MI permissions to read secrets (RBAC model)
 resource "azurerm_role_assignment" "kv_secrets_user" {
-  scope                = var.key_vault_id
+  scope                = data.terraform_remote_state.private.outputs.key_vault_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_linux_function_app.func.identity[0].principal_id
 }

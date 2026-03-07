@@ -1,0 +1,37 @@
+﻿{
+  "app_insights_connection_string": {
+    "sensitive": true,
+    "type": "string",
+    "value": "InstrumentationKey=f5e159d2-e1f1-4ff5-8967-5eb0637f5157;IngestionEndpoint=https://eastus2-3.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus2.livediagnostics.monitor.azure.com/;ApplicationId=301b5a1b-9a4d-43b2-8240-23940c67c4b4"
+  },
+  "core_rg_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "rg-azure-zero-trust-serverless-api-dev-core"
+  },
+  "log_analytics_workspace_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "/subscriptions/b5495b24-716e-4bec-9da9-cd8444872237/resourceGroups/rg-azure-zero-trust-serverless-api-dev-core/providers/Microsoft.OperationalInsights/workspaces/law-azure-zero-trust-serverless-api-dev"
+  },
+  "private_dns_zone_blob_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "/subscriptions/b5495b24-716e-4bec-9da9-cd8444872237/resourceGroups/rg-azure-zero-trust-serverless-api-dev-core/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+  },
+  "private_dns_zone_kv_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "/subscriptions/b5495b24-716e-4bec-9da9-cd8444872237/resourceGroups/rg-azure-zero-trust-serverless-api-dev-core/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net"
+  },
+  "subnet_private_endpoints_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "/subscriptions/b5495b24-716e-4bec-9da9-cd8444872237/resourceGroups/rg-azure-zero-trust-serverless-api-dev-core/providers/Microsoft.Network/virtualNetworks/vnet-azure-zero-trust-serverless-api-dev/subnets/snet-private-endpoints"
+  },
+  "vnet_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "/subscriptions/b5495b24-716e-4bec-9da9-cd8444872237/resourceGroups/rg-azure-zero-trust-serverless-api-dev-core/providers/Microsoft.Network/virtualNetworks/vnet-azure-zero-trust-serverless-api-dev"
+  }
+}

@@ -26,3 +26,7 @@ output "private_dns_zone_kv_id" {
 output "private_dns_zone_blob_id" {
   value = azurerm_private_dns_zone.blob.id
 }
+
+output "subnet_app_integration_id" {
+  value = azurerm_subnet.snet_app_integration.id
+}

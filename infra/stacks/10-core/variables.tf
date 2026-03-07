@@ -30,3 +30,8 @@ variable "snet_private_endpoints_cidr" {
   type    = string
   default = "10.60.10.0/24"
 }
+
+variable "snet_app_integration_cidr" {
+  type    = string
+  default = "10.60.20.0/24"
+}
