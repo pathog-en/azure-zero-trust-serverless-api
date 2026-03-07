@@ -101,3 +101,18 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob_link" {
   registration_enabled  = false
   tags                  = local.tags
 }
+
+resource "azurerm_private_dns_zone" "appsvc" {
+  name                = "privatelink.azurewebsites.net"
+  resource_group_name = azurerm_resource_group.rg.name
+  tags                = local.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "appsvc_link" {
+  name                  = "appsvc-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.appsvc.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+  registration_enabled  = false
+  tags                  = local.tags
+}

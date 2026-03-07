@@ -30,3 +30,7 @@ output "private_dns_zone_blob_id" {
 output "subnet_app_integration_id" {
   value = azurerm_subnet.snet_app_integration.id
 }
+
+output "private_dns_zone_appsvc_id" {
+  value = azurerm_private_dns_zone.appsvc.id
+}
