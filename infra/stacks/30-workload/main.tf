@@ -64,7 +64,7 @@ resource "azurerm_linux_function_app" "func" {
   virtual_network_subnet_id = data.terraform_remote_state.core.outputs.subnet_app_integration_id
 
   https_only                    = true
-  public_network_access_enabled = false
+  public_network_access_enabled = true
 
   # Enable this after PE validation:
   # public_network_access_enabled = false
