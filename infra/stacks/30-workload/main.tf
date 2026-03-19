@@ -59,7 +59,7 @@ resource "azurerm_linux_function_app" "func" {
   service_plan_id = azurerm_service_plan.plan.id
 
   storage_account_name       = data.terraform_remote_state.private.outputs.storage_account_name
-  storage_account_access_key = null
+  storage_account_access_key = data.terraform_remote_state.private.outputs.storage_account_primary_access_key
 
   virtual_network_subnet_id = data.terraform_remote_state.core.outputs.subnet_app_integration_id
 

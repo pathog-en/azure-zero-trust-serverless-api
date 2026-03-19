@@ -29,3 +29,13 @@ output "kv_private_endpoint_id" {
 output "blob_private_endpoint_id" {
   value = azurerm_private_endpoint.blob_pe.id
 }
+
+output "storage_account_primary_access_key" {
+  value     = azurerm_storage_account.sa.primary_access_key
+  sensitive = true
+}
+
+output "storage_account_primary_connection_string" {
+  value     = azurerm_storage_account.sa.primary_connection_string
+  sensitive = true
+}
