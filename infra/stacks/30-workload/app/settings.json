@@ -1,0 +1,7 @@
+[
+  {
+    "name": "WEBSITE_RUN_FROM_PACKAGE",
+    "value": "https://stztdevyoh2h0.blob.core.windows.net/packages/functionapp.zip?sp=r&st=2026-03-27T23:44:02Z&se=2026-03-28T07:59:02Z&spr=https&sv=2024-11-04&sr=b&sig=Qt578mimE2rxoV8J4fl%2BMf5w9UlFwjTy%2FOHpG0aB2s0%3D",
+    "slotSetting": false
+  }
+]
