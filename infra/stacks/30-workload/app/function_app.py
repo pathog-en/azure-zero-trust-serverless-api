@@ -32,25 +32,24 @@ def health(req: func.HttpRequest) -> func.HttpResponse:
 def secret_check(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Processing /api/secret-check request")
 
-    key_vault_name = os.getenv("KEY_VAULT_NAME")
+    key_vault_uri = os.getenv("KEY_VAULT_URI")
     secret_name = os.getenv("SECRET_NAME", "demo-config")
 
-    if not key_vault_name:
-        logging.error("Missing KEY_VAULT_NAME application setting")
+    if not key_vault_uri:
+        logging.error("Missing KEY_VAULT_URI application setting")
         return func.HttpResponse(
             json.dumps({
                 "status": "error",
-                "message": "KEY_VAULT_NAME app setting is not configured"
+                "message": "KEY_VAULT_URI app setting is not configured"
             }, indent=2),
             status_code=500,
             mimetype="application/json"
         )
 
-    kv_uri = f"https://{key_vault_name}.vault.azure.net/"
-
+    
     try:
         credential = DefaultAzureCredential()
-        client = SecretClient(vault_url=kv_uri, credential=credential)
+        client = SecretClient(vault_url=key_vault_uri, credential=credential)
 
         secret = client.get_secret(secret_name)
 
@@ -69,16 +68,16 @@ def secret_check(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
-    except Exception as exc:
+    except Exception:
         logging.exception("Failed to retrieve secret from Key Vault")
 
         response = {
             "status": "error",
             "key_vault_access": "failed",
             "retrieved": False,
-            "message": "Managed identity or Key Vault access failed.",
-            "error": str(exc)
-        }
+            "message": "Unable to retrieve the requested configuration."
+        }   
+
 
         return func.HttpResponse(
             json.dumps(response, indent=2),

@@ -21,3 +21,26 @@ terraform.rc
 # OS
 .DS_Store
 Thumbs.db
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Azure Functions build dependencies
+.python_packages/
+
+# Local Azure Functions settings
+local.settings.json
+
+# Generated deployment artifacts
+functionapp.zip
+functionapp-source.zip
+
+# Generated application packages
+/artifacts/
