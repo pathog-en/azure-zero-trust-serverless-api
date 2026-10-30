@@ -1,194 +1,266 @@
 ## Azure Zero Trust Serverless API
 
-A Terraform-driven Azure architecture demonstrating a Zero Trust serverless API built with Azure Functions (Python), Private Endpoints, Managed Identity, and Key Vault.
+A Terraform-driven Azure cloud engineering project demonstrating private networking, managed identity, role-based access control (RBAC), and infrastructure automation using Azure Functions and Key Vault.
 
-This project shows how to build a secure, production-style cloud architecture where services communicate only over private networks, secrets are retrieved using managed identities, and infrastructure is fully defined using Infrastructure as Code.
+## Project Overview
+
+The goal of this project is to design and validate a serverless API architecture using Zero Trust security principles.
+
+The architecture includes:
+
+- An Azure Function App running Python 3.11.
+- VNet integration for outbound network connectivity.
+- Private endpoints for the Function App, Azure Key Vault, and Azure Storage.
+- Private DNS for resolving Azure service hostnames to private endpoint IP addresses.
+- System-assigned managed identity and Azure RBAC for identity-based secret access.
+- Terraform for infrastructure provisioning.
+- Application Insights and Log Analytics for observability.
+
+The project also documents security findings discovered during validation, including permissive public inbound access rules on the Function App and SCM deployment endpoint.
+
+**Project status**: Terraform configuration validation and automated code tests passed. Private-only access enforcement and live end-to-end Key Vault integration remain outstanding.
+
 
 ## Architecture Overview
-Client
-   |
-   v
-Azure Function App (Python)
-Private Endpoint (Inbound)
-   |
-   v
-VNet Integration Subnet
-   |
-   +-----------------------> Azure Key Vault (Private Endpoint)
-   |
-   +-----------------------> Azure Storage Account (Private Endpoint)
-   |
-   v
-Log Analytics + Application Insights
-Security Model
 
-## This architecture follows Zero Trust principles:
+```mermaid
+flowchart TD
+    Client["Client on private network"]
+    FPE["Function App private endpoint"]
+    FA["Azure Function App"]
+    VNet["VNet integration"]
+    KVPE["Key Vault private endpoint"]
+    KV["Azure Key Vault"]
+    DNS["Private DNS"]
 
-No public service endpoints
-Private endpoint communication
-Managed identity authentication
-Secrets stored in Key Vault
-Infrastructure deployed through Terraform
-Centralized logging and monitoring
-Key Features
-Serverless API
-Azure Functions (Python 3.11)
-HTTP triggered endpoints
-Built using the Python v2 programming model
+    Client -->|"Private inbound access"| FPE
+    FPE --> FA
+    FA -->|"Outbound connectivity"| VNet
+    VNet --> KVPE
+    KVPE --> KV
+    VNet -.->|"Resolve Key Vault hostname"| DNS
+    DNS -.->|"Return private endpoint IP"| VNet
+```
 
-## Endpoints:
+## Validation Results
 
-GET /api/health
-GET /api/secret-check
-Managed Identity Authentication
+The following checks were completed during the
+Validate phase of the project:
 
-The Function App retrieves secrets from Key Vault using:
+| Validation | Result |
+|---|---|
+| Ruff static analysis | PASS |
+| Python unit tests | PASS (4/4) |
+| Source-only deployment ZIP structure | PASS |
+| Terraform validation | PASS (4/4 stacks) |
 
-DefaultAzureCredential
+### Validation Scope
 
-No credentials or secrets are stored in code.
+These checks confirm code quality, expected unit-test
+behavior, deployment package structure, and Terraform
+configuration validity.
 
-Private Networking
+They do not independently prove that the deployed
+Function App can retrieve secrets from Key Vault.
 
-All services communicate through Private Endpoints:
+Live end-to-end verification remains a documented
+follow-up.
 
-Service	Private Endpoint
-Function App	inbound
-Key Vault	private access
-Storage Account	private access
 
-Public network access is disabled wherever possible.
 
-## Observability
+## Security Design and Findings
 
-The system includes:
+### Implemented Security Controls
 
-Application Insights
-Log Analytics Workspace
-structured logging from the Function App
-Repository Structure
-azure-zero-trust-serverless-api
-│
-├── app
-│   ├── function_app.py
-│   ├── host.json
-│   └── requirements.txt
-│
-├── infra
-│   └── stacks
-│       ├── 00-bootstrap
-│       ├── 10-core
-│       ├── 20-private-services
-│       └── 30-workload
-│
-└── README.md
+- Private endpoints for Azure Functions, Key Vault,
+  and Azure Storage.
+- VNet integration for outbound connectivity.
+- Private DNS for private endpoint resolution.
+- System-assigned managed identity for authentication.
+- Azure RBAC for Key Vault secret authorization.
+- Centralized monitoring with Application Insights
+  and Log Analytics.
 
-## Terraform Stacks
+### Security Finding: Public Inbound Access
 
-Stack	Purpose
-00-bootstrap	Terraform state backend
-10-core	networking, DNS, monitoring
-20-private-services	Key Vault, Storage, Private Endpoints
-30-workload	Function App + Managed Identity
-Function Endpoints
-Health Endpoint
-GET /api/health
+During validation, the Function App and its SCM
+deployment endpoint were found to have permissive
+public inbound access rules.
 
-Returns service health status.
+Although private endpoints were configured,
+their presence alone did not disable public access.
 
-Example response:
+This means the private-only networking objective
+was not fully enforced.
 
-{
-  "status": "ok",
-  "service": "azure-zero-trust-serverless-api",
-  "environment": "Production",
-  "timestamp_utc": "2026-03-28T17:45:00Z"
-}
-Secret Check Endpoint
-GET /api/secret-check
+### Required Remediation
 
-Demonstrates secure Key Vault access via managed identity.
+- Restrict or disable public network access to the
+  Function App and SCM endpoint.
+- Confirm that authorized clients can still reach
+  the application through its private endpoint.
+- Ensure the deployment workflow can reach the
+  private SCM endpoint.
+- Revalidate access restrictions after remediation.
 
-Example response:
+**Status:** Security finding documented; remediation
+and live verification remain outstanding.
 
-{
-  "status": "ok",
-  "key_vault_access": "success",
-  "secret_name": "demo-config",
-  "retrieved": true
-}
+
+
+## API Endpoints
+
+The Azure Function App exposes two HTTP endpoints.
+
+### Health Check
+
+`GET /api/health`
+
+Returns the application's health-check response.
+
+A successful HTTP 200 response confirms that the
+health endpoint is responding, but does not prove
+Key Vault connectivity.
+
+### Key Vault Secret Check
+
+`GET /api/secret-check`
+
+Attempts to retrieve the `demo-config` secret
+from Azure Key Vault.
+
+The Function App uses `DefaultAzureCredential`
+to obtain credentials through its system-assigned
+managed identity in Azure.
+
+Azure RBAC grants the identity permission to
+retrieve secrets using the Key Vault Secrets User
+role.
+
+**Validation note:** Unit tests cover successful
+and failed secret retrieval using mocks.
+Live end-to-end secret retrieval has not yet
+been independently verified.
+
+
 ## Deployment
 
-Infrastructure is deployed using Terraform.
+### Infrastructure Deployment
 
-Example deployment flow:
+Infrastructure is provisioned using Terraform.
 
+The four stacks are deployed in this order:
+
+1. `00-bootstrap` — Terraform remote state
+2. `10-core` — Networking, private DNS, monitoring
+3. `20-private-services` — Key Vault, Storage,
+   and private endpoints
+4. `30-workload` — Function App and managed identity
+
+Standard Terraform commands:
+
+```bash
 terraform init
 terraform plan
 terraform apply
+```
 
-Stacks should be deployed in order:
+Each stack must be initialized and deployed
+using its appropriate configuration and state.
 
-00-bootstrap
-10-core
-20-private-services
-30-workload
-Application Deployment
+### Application Packaging
 
-## The Function App uses Azure remote build (Oryx) to install dependencies.
+The Function App is packaged using:
 
-Required configuration:
+`scripts/build-function-package.ps1`
 
-SCM_DO_BUILD_DURING_DEPLOYMENT=true
-ENABLE_ORYX_BUILD=true
-FUNCTIONS_WORKER_RUNTIME=python
+The source-only deployment ZIP includes:
 
-Deployment command:
+- `function_app.py`
+- `host.json`
+- `requirements.txt`
 
-az functionapp deployment source config-zip \
-  --resource-group <resource-group> \
-  --name <function-app-name> \
-  --src functionapp-source.zip \
-  --build-remote true
-Requirements
+Python dependencies are not bundled into the ZIP.
 
-## Python dependencies:
+### Remote Build
 
-azure-functions
-azure-identity
-azure-keyvault-secrets
-Security Highlights
+The Function App runs Python 3.11 on Linux.
 
-## This project demonstrates several enterprise cloud security patterns:
+Azure Oryx remote build installs dependencies
+from `requirements.txt` in the target environment.
 
-Zero Trust networking
-Managed Identity authentication
-Private endpoints
-Secret management via Key Vault
-Infrastructure as Code
-Centralized logging
-Future Improvements
+This avoids relying on locally built Windows
+Python dependencies for a Linux deployment.
 
-## Potential extensions to the architecture:
+### Deployment Considerations
 
-API Management gateway
-mTLS authentication
-private DNS automation
-CI/CD pipeline
-automated security scanning
-OpenAPI documentation
-Learning Objectives
+The Function App has a private endpoint.
 
-## This project demonstrates practical implementation of:
+When public SCM access is restricted, the
+deployment runner must have network connectivity
+to the private SCM deployment endpoint.
 
-Azure networking
-Terraform infrastructure design
-secure serverless architectures
-identity-based authentication
-production-ready cloud monitoring
-License
+A successful Azure authentication does not
+guarantee that the deployment endpoint is
+network-reachable.
+
+
+## Repository Structure
+
+```text
+azure-zero-trust-serverless-api/
+├── app/
+│   ├── function_app.py
+│   ├── host.json
+│   └── requirements.txt
+├── infra/
+│   └── stacks/
+│       ├── 00-bootstrap/
+│       ├── 10-core/
+│       ├── 20-private-services/
+│       └── 30-workload/
+├── scripts/
+│   └── build-function-package.ps1
+└── README.MD
+```
+
+
+## Future Improvements
+
+The following improvements would strengthen the
+architecture and its deployment workflow:
+
+- Restrict public access to the Function App and
+  SCM deployment endpoint.
+- Implement a CI/CD workflow with private network
+  access to the deployment endpoint.
+- Perform live end-to-end Key Vault secret retrieval
+  validation.
+- Add automated security scanning.
+- Pin Python dependency versions for reproducibility.
+- Add API Management and OpenAPI documentation.
+
+## Lessons Learned
+
+This project reinforced several cloud engineering
+concepts:
+
+- Private endpoints do not automatically disable
+  public access.
+- VNet integration enables outbound connectivity,
+  while private endpoints provide private access
+  to individual services.
+- Private DNS resolves service hostnames to
+  private endpoint IP addresses.
+- Managed identity handles authentication,
+  while RBAC controls authorization.
+- Passing unit tests and Terraform validation
+  does not guarantee successful live integration.
+- A successful health check does not prove
+  downstream dependencies are functioning.
+
+## License
 
 MIT License.
 
-![alt text](image-1.png)
 
