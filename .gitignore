@@ -47,3 +47,6 @@ functionapp-source.zip
 
 
 **/.terraform-validation/
+
+# Local Azure deployment configuration
+/infra/stacks/30-workload/app/settings.json
