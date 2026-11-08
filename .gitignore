@@ -44,3 +44,6 @@ functionapp-source.zip
 
 # Generated application packages
 /artifacts/
+
+
+**/.terraform-validation/
